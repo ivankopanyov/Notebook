@@ -7,8 +7,7 @@ class BaseModel:
                 id: int = 0, 
                 create_date: datetime = datetime.now(), 
                 update_date: datetime = datetime.now()) -> None:
-        if id != None:
-            self.id = id
+        self.id = id
         self.create_date = create_date
         self.update_date = update_date
 

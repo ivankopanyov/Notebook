@@ -1,15 +1,37 @@
 from models import BaseModel
 from serializers import BaseSerializer
+from file import FileManager
+
 
 class Database:
+
+    def select(self, id: int) -> BaseModel | None:
+        pass
+
+    def select_all(self) -> list[BaseModel]:
+        pass
+
+    def insert(self, entity: BaseModel) -> None:
+        pass
+
+    def update(self, entity: BaseModel) -> None:
+        pass
+
+    def delete(self, id: int) -> None:
+        pass
+
+
+class FileDatabase(Database):
 
     __cache__: list[BaseModel] = None
     __current_id__: int = 0
 
-    def __init__(self, serializer: BaseSerializer) -> None:
+    def __init__(self, 
+                serializer: BaseSerializer, 
+                file_manager: FileManager) -> None:
         self.serializer = serializer
+        self.file_manager = file_manager
 
-    @classmethod
     def select(self, id: int) -> BaseModel | None:
         if self.__cache__ == None:
             self.__get_cache__()
@@ -18,38 +40,35 @@ class Database:
                 return note
         return None
 
-    @classmethod
     def select_all(self) -> list[BaseModel]:
         if self.__cache__ == None:
             self.__get_cache__()
         return self.__cache__
 
-    @classmethod
-    def insert(self, note: BaseModel) -> None:
-        if type(note != BaseModel):
-            return
+    def insert(self, entity: BaseModel) -> None:
+        # if type(entity != BaseModel):
+        #     return
         if self.__current_id__ == 0:
-            self.__get_last_id__()
-        note.id = self.__current_id__
+            self.__get_current_id__()
+        entity.id = self.__current_id__
         if self.__cache__ == None:
             self.__get_cache__()
-        self.__cache__.append(note)
+        self.__cache__.append(entity)
         self.__set_cache__()
+        self.__current_id__ += 1
 
-    @classmethod
-    def update(self, note: BaseModel) -> None:
-        if type(note) != BaseModel:
-            return
+    def update(self, entity: BaseModel) -> None:
+        # if type(entity) != BaseModel:
+        #     return
         if self.__cache__ == None:
             self.__get_cache__()
         for item in self.__cache__:
-            if item.id == note.id:
+            if item.id == entity.id:
                 self.__cache__.remove(item)
-                self.__cache__.append(note)
+                self.__cache__.append(entity)
                 self.__set_cache__()
                 break
 
-    @classmethod
     def delete(self, id: int) -> None:
         if self.__cache__ == None:
             self.__get_cache__()
@@ -60,12 +79,17 @@ class Database:
                 break
 
     def __get_cache__(self):
-        pass
+        data = self.file_manager.read()
+        self.__cache__ = self.serializer.encode(data)
     
     def __set_cache__(self):
-        pass
+        data = self.serializer.decode(self.__cache__)
+        self.file_manager.write(data)
 
-    def __get_last_id__(self):
+    def __get_current_id__(self):
         if self.__cache__ == None:
             self.__get_cache__()
+        if len(self.__cache__) == 0:
+            self.__current_id__ = 1
+            return
         self.__current_id__ = self.__cache__[-1].id + 1

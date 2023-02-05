@@ -1,10 +1,5 @@
-from datetime import datetime
-
-
 class NoteDto:
 
-    def __init__(self, 
-                name: str, 
-                body: str):
+    def __init__(self, name: str, body: str) -> None:
         self.name = name
         self.body = body

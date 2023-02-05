@@ -6,18 +6,15 @@ from models import Note
 
 class BaseSerializer:
 
-    @classmethod
     def decode(self, objects: list[object]):
         pass
     
-    @classmethod
     def encode(self, data: str) -> list[object]:
         pass
 
 
-class NoteSerializer(BaseSerializer):
+class JsonNoteSerializer(BaseSerializer):
 
-    @classmethod
     def decode(self, objects: list[Note]) -> str:
         result = []
         for note in objects:
@@ -30,7 +27,6 @@ class NoteSerializer(BaseSerializer):
         })
         return json.dumps(result)
 
-    @classmethod
     def encode(self, data: str) -> list[Note]:
         result = []
         for note in json.loads(data):
