@@ -37,6 +37,7 @@ class SelectedList:
             if key not in self.items.keys():
                 print(f"Команда {key} не найдена! Повторите попытку...")
             else:
+                print()
                 return self.items[key].action
 
 
@@ -93,6 +94,7 @@ class Form:
         result = {}
         for key in self.items.keys():
             result[key] = self.items[key].input_value()
+        print()
         return result
 
 

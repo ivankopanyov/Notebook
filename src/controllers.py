@@ -46,7 +46,7 @@ class NoteController(BaseController):
                 update_date=now
             )
         )
-        return self.get_all()
+        return lambda: self.get_all()
 
     def get(self, id: int) -> ListView:
         note = self.db.select(id)
@@ -76,7 +76,7 @@ class NoteController(BaseController):
                 action=lambda: self.get_all()
             )
         )
-        return ListView()
+        return ListView(selected_list, message)
 
     def get_all(self, order_by_update_date: bool = False, desc: bool = False) -> ListView:
         notes = self.db.select_all()
@@ -90,8 +90,8 @@ class NoteController(BaseController):
             for note in notes:
                 selected_list.add(SelectedListItem(
                     key=f"{note.id}",
-                    title=f"{note.name}",
-                    action=lambda id: self.get(id)
+                    title=f"{note.name} (Изменено: {note.update_date:%d.%m.%Y %H:%M:%S})",
+                    action=lambda: self.get(note.id)
                 ))
         selected_list.add(SelectedListItem(
             key="add",
@@ -131,7 +131,7 @@ class NoteController(BaseController):
         note.body = entity.body
         note.update_date = datetime.now()
         self.db.update(note)
-        return self.get(id)
+        return lambda: self.get(id)
 
     def delete(self, id: int) -> ListView:
         self.db.delete(id)

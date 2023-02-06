@@ -19,10 +19,7 @@ def __build__() -> BaseController:
 def __start__(controller: BaseController) -> None:
     action = lambda: controller.get_all()
     while True:
-        print(f"action = {type(action)}")
         view = action()
-        
-        print(f"view = {type(view)}")
         action = view.show()
 
 
