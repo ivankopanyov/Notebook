@@ -4,11 +4,96 @@ from collections import OrderedDict
 from dto import NoteDto
 
 
-class ListItem:
+class SelectedListItem:
 
-    def __init__(self, name: str, action) -> None:
-        self.name = name
+    def __init__(self,
+                key: str,
+                title: str,
+                action) -> None:
+        self.key = key
+        self.title = title
         self.action = action
+
+
+class SelectedList:
+
+    def __init__(self, footer: int = 0) -> None:
+        self.items: OrderedDict[str, SelectedListItem] = OrderedDict()
+        self.footer = footer
+
+    def add(self, item: SelectedListItem) -> None:
+        self.items[item.key] = item
+
+    def select(self):
+        i = 0
+        for key in self.items.keys():
+            print(f"{key} >> {self.items[key].title}")
+            i += 1
+            if i == len(self.items) - self.footer:
+                print()
+        print()
+        while True:
+            key = input("Укажите номер пункта меню или команду: ")
+            if key not in self.items.keys():
+                print(f"Команда {key} не найдена! Повторите попытку...")
+            else:
+                return self.items[key].action
+
+
+class FormItem(ABC):
+
+    def __init__(self, 
+                key: str,
+                title: str,
+                min: int = -1, 
+                max: int = -1) -> None:
+        self.key = key
+        self.title = title
+        self.min = min
+        self.max = max if max >= min else min
+    
+    @abstractmethod
+    def input_value(self):
+        pass
+
+class FormStringItem(FormItem):
+    
+    def input_value(self) -> str:
+        while True:
+            result = input(self.title)
+            if (self.min >= 0 and len(result) < self.min) or (self.max >= 0 and len(result) > self.max):
+                print("Некорректная длина строки! Повторите попытку...")
+            else:
+                return result
+
+
+class FormIntItem(FormItem):
+
+    def input_value(self) -> int:
+        while True:
+            try:
+                result = int(input(self.title))
+                if (self.min >= 0 and result < self.min) or (self.max >= 0 and result > self.max):
+                    print("Нарушен диапазон! Повторите попытку...")
+                else:
+                    return result
+            except TypeError:
+                print("Некорректный ввод! Повторите попытку...")
+
+
+class Form:
+
+    def __init__(self) -> None:
+        self.items: OrderedDict[str, FormItem] = OrderedDict()
+
+    def add(self, item: FormItem) -> None:
+        self.items[item.key] = item
+    
+    def fill(self) -> dict:
+        result = {}
+        for key in self.items.keys():
+            result[key] = self.items[key].input_value()
+        return result
 
 
 class BaseView(ABC):
@@ -21,105 +106,29 @@ class BaseView(ABC):
 class ListView(BaseView):
 
     def __init__(self, 
-                message: str, 
-                items: OrderedDict[str, ListItem], 
-                footer: int = 0, 
-                error: str = None) -> None:
+                selected_list: SelectedList, 
+                message: str | None = None) -> None:
+        self.selected_list = selected_list
         self.message = message
-        self.items = items
-        self.footer = footer
-        self.error = error
-
+    
     def show(self):
-        if self.error != None:
-            show_message(self.error)
-        return select_item_in_dict(self.message, self.items, self.footer)
+        if self.message != None:
+            print(self.message)
+            print()
+        return self.selected_list.select()
 
 
-class ItemView(BaseView):
+class FormView(BaseView):
 
     def __init__(self, 
-                message: str, 
-                items: list[str], 
-                zero_item: str = None, 
-                error: str = None) -> None:
-        self.message = message
-        self.items = items
-        self.zero_item = zero_item
-        self.error = error
-
-    def show(self):
-        if self.error != None:
-            show_message(self.error)
-        return select_item_in_dict(self.message, self.items, self.zero_item)
-
-
-class CreateView(BaseView):
-
-    def __init__(self, items: dict[str, str], action) -> None:
-        self.items = items
+                form: Form,
+                action,
+                message: str | None = None) -> None:
+        self.form = form
         self.action = action
-
-    def show(self):
-        result = input_form(self.items)
-        note = NoteDto(
-            name=result["name"],
-            body=result["body"]
-        )
-        return lambda: self.action(note)
-
-
-def show_message(message: str) -> None:
-    print(message)
-
-
-def input_number(message: str = None, min: int = None, max: int = None) -> int:
-    if min != None and max != None and max < min:
-        max = min
-    if message == None:
-        message = f"Укажите число{f' от {min}' if type(min) == int else ''}{f' до {max}' if type(max) == int else ''}: "
-    while True:
-        try:
-            result = int(input(message))
-            if (type(min) == int and result < min) or (type(max) == int and result > max):
-                show_message("Нарушен диапазон! Повторите попытку...")
-                continue
-            return result
-        except TypeError:
-            show_message("Некорректный ввод! Повторите попытку...")
-
-
-def input_str(message: str) -> str:
-    return input(message)
-
-
-def input_form(items: dict[str, str]) -> dict[str, str]:
-    result = {}
-    for key in items.keys():
-        result[key] = input_str(items[key])
-    return items
-
-
-def select_item(message: str, items: list[str], zero_item: str = None) -> int:
-    for i in range(len(items)):
-        show_message(f"{i + 1}. {items[i]}")
-    if zero_item != None:
-        show_message(f"\n{0}. {zero_item}")
-    show_message("")
-    return input_number(message, 1 if zero_item == None else 0, len(items))
-
-
-def select_item_in_dict(message: str, items: OrderedDict[str, ListItem], footer: int = 0):
-    i = 0
-    for key in items:
-        show_message(f"{key} >> {items[key].name}")
-        i += 1
-        if i == len(items) - footer:
-            show_message("")
-    show_message("")
-    while True:
-        key = input_str(message)
-        if key not in items.keys():
-            show_message(f"Команда {key} не найдена! Повторите попытку...")
-        else:
-            return items[key].action
+        self.message = message
+    
+    def show(self) -> dict:
+        print(self.message)
+        print()
+        return self.action(self.form.fill())

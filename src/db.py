@@ -53,8 +53,6 @@ class FileDatabase(Database):
         return self.__cache__
 
     def insert(self, entity: BaseModel) -> None:
-        # if type(entity != BaseModel):
-        #     return
         if self.__current_id__ == 0:
             self.__get_current_id__()
         entity.id = self.__current_id__
@@ -65,8 +63,6 @@ class FileDatabase(Database):
         self.__current_id__ += 1
 
     def update(self, entity: BaseModel) -> None:
-        # if type(entity) != BaseModel:
-        #     return
         if self.__cache__ == None:
             self.__get_cache__()
         for item in self.__cache__:
