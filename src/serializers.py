@@ -1,14 +1,17 @@
+from abc import ABC, abstractmethod
 from datetime import datetime
 import json
 
 from models import Note
 
 
-class BaseSerializer:
+class BaseSerializer(ABC):
 
+    @abstractmethod
     def decode(self, objects: list[object]):
         pass
     
+    @abstractmethod
     def encode(self, data: str) -> list[object]:
         pass
 

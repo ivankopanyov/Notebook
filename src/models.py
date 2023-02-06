@@ -19,7 +19,7 @@ class Note(BaseModel):
                 name: str = '', 
                 body: str = '', 
                 create_date: datetime = datetime.now(), 
-                update_date: datetime = datetime.now()):
+                update_date: datetime = datetime.now()) -> None:
         super().__init__(id, create_date, update_date)
         self.name = name
         self.body = body

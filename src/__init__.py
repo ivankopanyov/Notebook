@@ -1,15 +1,27 @@
 from file import FileManager
 from serializers import JsonNoteSerializer
 from db import FileDatabase
-from controllers import NoteController
-from dto import NoteDto
-import time
+from controllers import BaseController, NoteController
 
-def main():
+
+def run():
+    controller = __build__()
+    __start__(controller)
+
+
+def __build__() -> BaseController:
     file_manager = FileManager("db.json")
     serializer = JsonNoteSerializer()
     db = FileDatabase(serializer=serializer, file_manager=file_manager)
-    controller = NoteController(db)
+    return NoteController(db)
+
+
+def __start__(controller: BaseController) -> None:
+    action = lambda: controller.get_all()
+    while True:
+        view = action()
+        action = view.show()
+
 
 if __name__ == "__main__":
-    main()
+    run()

@@ -1,22 +1,29 @@
+from abc import ABC, abstractmethod
+
 from models import BaseModel
 from serializers import BaseSerializer
 from file import FileManager
 
 
-class Database:
+class Database(ABC):
 
+    @abstractmethod
     def select(self, id: int) -> BaseModel | None:
         pass
 
+    @abstractmethod
     def select_all(self) -> list[BaseModel]:
         pass
 
+    @abstractmethod
     def insert(self, entity: BaseModel) -> None:
         pass
 
+    @abstractmethod
     def update(self, entity: BaseModel) -> None:
         pass
 
+    @abstractmethod
     def delete(self, id: int) -> None:
         pass
 
@@ -80,7 +87,7 @@ class FileDatabase(Database):
 
     def __get_cache__(self):
         data = self.file_manager.read()
-        self.__cache__ = self.serializer.encode(data)
+        self.__cache__ = self.serializer.encode(data) if data != None else []
     
     def __set_cache__(self):
         data = self.serializer.decode(self.__cache__)
