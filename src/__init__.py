@@ -1,27 +1,29 @@
-from file import FileManager
-from serializers import JsonNoteSerializer
-from db import FileDatabase
-from controllers import BaseController, NoteController
+"""Основной модуль приложения."""
+
+from .serializers import JsonNoteSerializer
+from .file import FileManager
+from .controllers import NoteController
+from .repositories import FileRepository
+from .settings import DB_FILE_NAME
 
 
 def run():
+    """Функция запуска приложения."""
     controller = __build__()
     __start__(controller)
 
 
-def __build__() -> BaseController:
-    file_manager = FileManager("db.json")
+def __build__() -> NoteController:
+    """Функция сборки приложения."""
+    file_manager = FileManager(DB_FILE_NAME)
     serializer = JsonNoteSerializer()
-    db = FileDatabase(serializer=serializer, file_manager=file_manager)
-    return NoteController(db)
+    repository = FileRepository(serializer=serializer, file_manager=file_manager)
+    return NoteController(repository)
 
 
-def __start__(controller: BaseController) -> None:
+def __start__(controller: NoteController) -> None:
+    """Функция старта приложения."""
     action = lambda: controller.get_all()
     while True:
         view = action()
         action = view.show()
-
-
-if __name__ == "__main__":
-    run()

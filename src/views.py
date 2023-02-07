@@ -1,30 +1,38 @@
+"""Модуль представлений."""
+
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 
-from dto import NoteDto
+from .base.views import BaseView
 
 
 class SelectedListItem:
+    """Класс, описывающий элемент списка для выбора."""
 
     def __init__(self,
                 key: str,
                 title: str,
                 action) -> None:
+        """Инициализация элемента списка."""
         self.key = key
         self.title = title
         self.action = action
 
 
 class SelectedList:
+    """Класс, описывающий список."""
 
     def __init__(self, footer: int = 0) -> None:
+        """Инициализация списка."""
         self.items: OrderedDict[str, SelectedListItem] = OrderedDict()
         self.footer = footer
 
     def add(self, item: SelectedListItem) -> None:
+        """Метод добавления элемента в список."""
         self.items[item.key] = item
 
     def select(self):
+        """Метод выбора элемента списка."""
         i = 0
         for key in self.items.keys():
             print(f"{key} >> {self.items[key].title}")
@@ -42,12 +50,14 @@ class SelectedList:
 
 
 class FormItem(ABC):
+    """Абстрактный класс, описывающий элемент формы для заполнения."""
 
     def __init__(self, 
                 key: str,
                 title: str,
                 min: int = -1, 
                 max: int = -1) -> None:
+        """Инициализация элемента формы."""
         self.key = key
         self.title = title
         self.min = min
@@ -55,11 +65,15 @@ class FormItem(ABC):
     
     @abstractmethod
     def input_value(self):
+        """Абстрактный метод заполнения элемента формы."""
         pass
 
+
 class FormStringItem(FormItem):
+    """Класс, описывающий элемент формы для ввода строки."""
     
     def input_value(self) -> str:
+        """Метод заполнения элемента формы."""
         while True:
             result = input(self.title)
             if (self.min >= 0 and len(result) < self.min) or (self.max >= 0 and len(result) > self.max):
@@ -69,8 +83,10 @@ class FormStringItem(FormItem):
 
 
 class FormIntItem(FormItem):
+    """Класс, описывающий элемент формы для ввода целого числа."""
 
     def input_value(self) -> int:
+        """Метод заполнения элемента формы."""
         while True:
             try:
                 result = int(input(self.title))
@@ -83,14 +99,18 @@ class FormIntItem(FormItem):
 
 
 class Form:
+    """Класс, описывающий форму для заполнения."""
 
     def __init__(self) -> None:
+        """Инициализация объекта формы."""
         self.items: OrderedDict[str, FormItem] = OrderedDict()
 
     def add(self, item: FormItem) -> None:
+        """Метод добавления элемента в форму."""
         self.items[item.key] = item
     
     def fill(self) -> dict:
+        """Метод заполнения формы."""
         result = {}
         for key in self.items.keys():
             result[key] = self.items[key].input_value()
@@ -98,22 +118,18 @@ class Form:
         return result
 
 
-class BaseView(ABC):
-
-    @abstractmethod
-    def show(self):
-        pass
-
-
 class ListView(BaseView):
+    """Класс, описывающий представление для вывода списка."""
 
     def __init__(self, 
                 selected_list: SelectedList, 
-                message: str | None = None) -> None:
+                message: str = None) -> None:
+        """Инициализация представления."""
         self.selected_list = selected_list
         self.message = message
     
     def show(self):
+        """Метод вывода представления на экран."""
         if self.message != None:
             print(self.message)
             print()
@@ -121,16 +137,19 @@ class ListView(BaseView):
 
 
 class FormView(BaseView):
+    """Класс, описывающий представление для вывода формы."""
 
     def __init__(self, 
                 form: Form,
                 action,
-                message: str | None = None) -> None:
+                message: str = None) -> None:
+        """Инициализация представления."""
         self.form = form
         self.action = action
         self.message = message
     
-    def show(self) -> dict:
+    def show(self):
+        """Метод вывода представления на экран."""
         print(self.message)
         print()
         return self.action(self.form.fill())

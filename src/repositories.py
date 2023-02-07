@@ -1,45 +1,29 @@
-from abc import ABC, abstractmethod
+"""Модуль репозиториев."""
 
-from models import BaseModel
-from serializers import BaseSerializer
-from file import FileManager
-
-
-class Database(ABC):
-
-    @abstractmethod
-    def select(self, id: int) -> BaseModel | None:
-        pass
-
-    @abstractmethod
-    def select_all(self) -> list[BaseModel]:
-        pass
-
-    @abstractmethod
-    def insert(self, entity: BaseModel) -> None:
-        pass
-
-    @abstractmethod
-    def update(self, entity: BaseModel) -> None:
-        pass
-
-    @abstractmethod
-    def delete(self, id: int) -> None:
-        pass
+from .base.repositories import BaseRepository
+from .base.models import BaseModel
+from .base.serializers import BaseSerializer
+from .file import FileManager
 
 
-class FileDatabase(Database):
+class FileRepository(BaseRepository):
+    """Класс, описывающий репозиторий, хранящий объекты в файле."""
 
     __cache__: list[BaseModel] = None
+    """Кэш объектов."""
+
     __current_id__: int = 0
+    """Текущий идентификатор для присвоения новому объекту."""
 
     def __init__(self, 
                 serializer: BaseSerializer, 
                 file_manager: FileManager) -> None:
+        """Инициализация объекта репозитория."""
         self.serializer = serializer
         self.file_manager = file_manager
 
-    def select(self, id: int) -> BaseModel | None:
+    def select(self, id: int) -> BaseModel:
+        """Метод получения объекта из репозитория."""
         if self.__cache__ == None:
             self.__get_cache__()
         for note in self.__cache__:
@@ -48,11 +32,13 @@ class FileDatabase(Database):
         return None
 
     def select_all(self) -> list[BaseModel]:
+        """Метод получения всех объектов из репозитория."""
         if self.__cache__ == None:
             self.__get_cache__()
         return self.__cache__
 
     def insert(self, entity: BaseModel) -> None:
+        """Метод добавления объекта в репозиторий."""
         if self.__current_id__ == 0:
             self.__get_current_id__()
         entity.id = self.__current_id__
@@ -63,6 +49,7 @@ class FileDatabase(Database):
         self.__current_id__ += 1
 
     def update(self, entity: BaseModel) -> None:
+        """Метод изменения объекта в репозитории."""
         if self.__cache__ == None:
             self.__get_cache__()
         for item in self.__cache__:
@@ -73,6 +60,7 @@ class FileDatabase(Database):
                 break
 
     def delete(self, id: int) -> None:
+        """Метод удаления объекта из репозитория."""
         if self.__cache__ == None:
             self.__get_cache__()
         for note in self.__cache__:
@@ -82,14 +70,17 @@ class FileDatabase(Database):
                 break
 
     def __get_cache__(self):
+        """Метод получения объектов из файла."""
         data = self.file_manager.read()
-        self.__cache__ = self.serializer.encode(data) if data != None else []
+        self.__cache__ = self.serializer.decode(data) if data != None else []
     
     def __set_cache__(self):
-        data = self.serializer.decode(self.__cache__)
+        """Метод записи объектов в файл."""
+        data = self.serializer.encode(self.__cache__)
         self.file_manager.write(data)
 
     def __get_current_id__(self):
+        """Метод получения текущего идентификатора."""
         if self.__cache__ == None:
             self.__get_cache__()
         if len(self.__cache__) == 0:
